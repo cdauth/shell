@@ -1,0 +1,28 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <OTR key file>" >&2
+	exit 1
+fi
+
+echo -n "OTR username (e-mail address): "
+read otr_username
+
+echo -n "OTR password: "
+read -s otr_password
+
+echo
+
+[ -z "$otr_rm" ] && export otr_rm="rm -i"
+
+for i in "$@"; do
+	in="$i"
+	out="$(basename "$in")"
+	out="${out%%.otrkey}"
+
+	otrdecoder -i "$in" -e "$otr_username" -p "$otr_password" && $otr_rm "$in" || continue
+
+	if ask "Cut now?"; then
+		cutlist "$out"
+	fi
+done

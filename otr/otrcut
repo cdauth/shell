@@ -1,0 +1,61 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <avi file>" >&2
+	exit 1
+fi
+
+fname_avi="${1}"
+fname_p="${fname_avi%%.avi}"
+fname_p="${fname_p%%.wmv}"
+fname_cutlist="${fname_p}.cutlist"
+fname_edl="${fname_p}.edl"
+fname_js="${fname_p}.avidemux.js"
+fname_tmp="${fname_avi}.tmp"
+
+if [ ! -z "$DISPLAY" ]; then
+	if which avidemux2_qt4 >/dev/null 2>/dev/null; then
+		avidemux="avidemux2_qt4"
+	elif which avidemux2_gtk >/dev/null 2>/dev/null; then
+		avidemux="avidemux2_gtk"
+	elif which avidemux2 >/dev/null 2>/dev/null; then
+		avidemux="avidemux2"
+	elif which avidemux >/dev/null 2>/dev/null; then
+		avidemux="avidemux"
+	else
+		avidemux="avidemux2_cli"
+	fi
+else
+	avidemux="avidemux2_cli"
+fi
+
+[ -z "$otrcut_rm" ] && export otrcut_rm="rm -i"
+[ -z "$otrcut_mv" ] && export otrcut_mv="mv -i"
+
+[ ! -f "${fname_js}" -a -f "${fname_cutlist}" ] && cutlist2avidemux "${fname_cutlist}" "${fname_js}" "${fname_avi}"
+
+ad_ret=1
+if [ -f "${fname_js}" ]; then
+	echo "Cutting..."
+	"$avidemux" --autoindex --force-smart --run "$fname_js" --quit << EOF 2>&1 | grep ETA
+y
+y
+y
+EOF
+	ad_ret=${PIPESTATUS[0]}
+	[[ "$ad_ret" = 0 ]] && echo "Finished" || echo "Failed"
+elif [ ! -f "${fname_js}" -a ! -z "$DISPLAY" ]; then
+	"$avidemux" "${fname_avi}"
+	ad_ret=$?
+fi
+if [[ "$ad_ret" = 0 ]] && [ -f "${fname_tmp}" ]
+then
+	$otrcut_mv "${fname_tmp}" "${fname_avi}"
+	[ -f "${fname_edl}" ] && $otrcut_rm "${fname_edl}"
+	[ -f "${fname_js}" ] && $otrcut_rm "${fname_js}"
+	[ -f "${fname_cutlist}" ] && $otrcut_rm "${fname_cutlist}"
+fi
+
+if ask "Convert to mkv?"; then
+	divx2mkv "${fname_avi}"
+fi

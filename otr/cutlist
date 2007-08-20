@@ -1,0 +1,68 @@
+#!/usr/bin/php
+<?php
+	if($argc < 2)
+	{
+		fputs(STDERR, "Usage: ".$argv[0]." <filename>\n");
+		exit(1);
+	}
+
+	$fname = $argv[1];
+	if(!is_file($fname))
+	{
+		fputs(STDERR, "File does not exist.\n");
+		exit(1);
+	}
+
+	$url = "http://cutlist.de/getxml.php?version=0.9.8.0&ofsb=".filesize($fname);
+	$tmp = "/tmp/cutlists.xml.".time();
+	$cl = preg_replace("/\.(wmv|avi)(\.otrkey)?$/", ".cutlist", $fname);
+
+	passthru("wget ".escapeshellarg($url)." -O ".escapeshellarg($tmp));
+
+	if(filesize($tmp) < 1)
+	{
+		fputs(STDERR, "No cutlists have been found.\n");
+		exit(2);
+	}
+
+
+	$dom = new DOMDocument();
+	$dom->load($tmp);
+
+	unlink($tmp);
+
+	$cutlists = $dom->getElementsByTagName("cutlist");
+	if($cutlists->length < 1)
+	{
+		fputs(STDERR, "No cutlists have been found.\n");
+		exit(2);
+	}
+
+	$c = array();
+
+	for($i=0; $i<$cutlists->length; $i++)
+	{
+		$item = $cutlists->item($i);
+		$c[$i+1] = $item->getElementsByTagName("id")->item(0)->firstChild->data;
+		fputs(STDOUT, " (".($i+1).") ".$item->getElementsByTagName("name")->item(0)->firstChild->data." (rating ".$item->getElementsByTagName("rating")->item(0)->firstChild->data.", author rating ".$item->getElementsByTagName("ratingbyauthor")->item(0)->firstChild->data.")\n");
+	}
+
+	do
+	{
+		fputs(STDOUT, "\nEnter the number of the cutlist to download: ");
+		$n = trim(fgets(STDIN));
+	}
+	while(!isset($c[$n]));
+
+	$url = "http://cutlist.de/getfile.php?id=".$c[$n];
+	passthru("wget ".escapeshellarg($url)." -O ".escapeshellarg($cl));
+
+	$exit = 0;
+	fputs(STDOUT, "Now cut? ");
+	if(in_array(strtolower(trim(fgets(STDIN))), array("y", "yes")))
+	{
+		fputs(STDOUT, "\n");
+		passthru("otrcut ".escapeshellarg($fname), $exit);
+	}
+	exit($exit);
+?>

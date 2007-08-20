@@ -1,0 +1,111 @@
+#!/usr/bin/php
+<?php
+	if($argc < 2)
+	{
+		fputs(STDERR, "Usage: ".$argv[0]." <cutlist file (in)> [edl file (out)]\n");
+		exit(1);
+	}
+
+	$CUTLIST = $argv[1];
+	$EDL = ($argc > 2 && $argv[2] != "/dev/stdout" && $argv[2] != "-") ? $argv[2] : false;
+
+	if(!is_file($CUTLIST) || !is_readable($CUTLIST))
+	{
+		fputs(STDERR, "cutlist file is not readable.\n");
+		exit(1);
+	}
+	
+	if($EDL)
+	{
+		if(file_exists($EDL))
+		{
+			if(!is_file($EDL) || !is_writable($EDL))
+			{
+				fputs(STDERR, "EDL file is not writable.\n");
+				exit(1);
+			}
+
+			fputs(STDOUT, "EDL file already exists. Overwrite? ");
+
+			$answer = strtolower(trim(fgets(STDIN)));
+			if(!in_array($answer, array("yes", "y", "ja", "j")))
+			{
+				fputs(STDERR, "Aborting.\n");
+				exit(2);
+			}
+		}
+		elseif(!is_writable(dirname($EDL)))
+		{
+			fputs(STDERR, "EDL file is not writable.\n");
+			exit(1);
+		}
+	}
+
+	$fh = ($EDL ? fopen($EDL, "w") : STDOUT);
+	if(!$fh)
+	{
+		fputs(STDERR, "Could not open EDL file for writing.\n");
+		exit(1);
+	}
+
+	$cutlist_content = parse_ini_file($CUTLIST, true);
+	if(!$cutlist_content)
+	{
+		fputs(STDERR, "cutlist parsing failed.\n");
+		exit(1);
+	}
+
+	$cuts = null;
+	if(isset($cutlist_content['General']) && isset($cutlist_content['General']['NoOfCuts']))
+		$cuts = $cutlist_content['General']['NoOfCuts'];
+	else
+		$keys = array_keys($cutlist_content);
+
+	$edl_output = array();
+	$edl_i = 0;
+	
+	for($i=0; ($cuts === null) ? $i<count($keys) : $i<$cuts; $i++)
+	{
+		if($cuts === null)
+		{
+			$k = $keys[$i];
+			if(substr($k, 0, 3) != "Cut") continue;
+		}
+		else
+		{
+			$k = "Cut".$i;
+			if(!isset($cuts["Cut".$i]))
+			{
+				fputs(STDERR, "Warning: Cut ".$i." does not exist.\n");
+				continue;
+			}
+		}
+		$v = &$cutlist_content[$k];
+
+		if(!isset($v['Start']) || (!isset($v['Duration']) && !isset($v['End'])))
+		{
+			fputs(STDERR, "Warning: Invalid cut ".$i.".\n");
+			continue;
+		}
+
+		if(!isset($v['End']))
+			$v['End'] = $v['Start'] + $v['Duration'];
+
+		if($edl_i == 0)
+			$edl_output[$edl_i] = array(0);
+		$edl_output[$edl_i][1] = $v['Start'];
+		$edl_output[++$edl_i] = array($v['End']);
+	}
+
+	if(count($edl_output) > 0)
+		$edl_output[$edl_i][1] = 80000000;
+
+	foreach($edl_output as $l)
+	{
+		if($l[0] == $l[1]) continue;
+		fwrite($fh, $l[0]." ".$l[1]." 0\n");
+	}
+
+	fclose($fh);
+	exit(0);
+?>

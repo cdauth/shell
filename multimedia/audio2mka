@@ -1,0 +1,35 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <input audio file> [output mka file]" >&2
+	exit 1
+fi
+
+
+tmp_dir="/tmp/audio2mka-$USER"
+[ ! -d "$tmp_dir" ] && mkdir -p "$tmp_dir"
+
+
+in="$1"
+tmp="$tmp_dir/$(date +%s).ogg"
+
+if [ ! -z "$2" ]; then
+	out="$2"
+else
+	out="${in%.*}.mka"
+fi
+
+[ -z "$audio2mka_rm" ] && export audio2mka_rm="rm -i"
+
+
+end() {
+	rm -f "$tmp"
+	exit "$1"
+}
+
+trap 'end 1' 1 2 3 15
+
+
+audio2ogg_rm="/bin/true" audio2ogg "$audio" "$ogg" || end $?
+mkvmerge -o "$mka" -a 0 -D -S "$ogg" --track-order 0:0 && $audio2mka_rm "$audio"
+end $?

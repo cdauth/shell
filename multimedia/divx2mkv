@@ -1,0 +1,44 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <input divx file> [output mkv file]" >&2
+	exit 1
+fi
+
+tmp_dir="/tmp/video2mkv-$USER"
+[ ! -d "$tmp_dir" ] && mkdir -p "$tmp_dir"
+
+in="$1"
+if [ ! -z "$2" ]; then
+	out="$2"
+else
+	out="$(readlink -f "${in%.avi}.mkv")"
+fi
+in="$(readlink -f "$in")"
+
+tmp_template="$tmp_dir/$(date +%s)"
+tmp_mp3="$tmp_template.mp3"
+tmp_ogg="$tmp_template.ogg"
+tmp_avi="$tmp_template.avi"
+
+[ -z "$divx2mkv_rm" ] && export divx2mkv_rm="rm -i"
+
+
+end() {
+	rm -f "$tmp_mp3"
+	rm -f "$tmp_ogg"
+	rm -f "$tmp_avi"
+	exit "$1"
+}
+
+trap 'end 1' 1 2 3 15
+
+
+cd "$tmp_dir"
+
+mplayer -dumpaudio "$in" -dumpfile "$tmp_mp3" || end $?
+time mp32ogg --delete "$tmp_mp3" || end $?
+ffmpeg -vcodec copy -an -vtag xvid -i "$in" "$tmp_avi" || end $?
+
+mkvmerge -o "$out" -d 0 -A -S "$tmp_avi" -a 0 -D -S "$tmp_ogg" --track-order 1:0,0:0 && $divx2mkv_rm "$in"
+end $?

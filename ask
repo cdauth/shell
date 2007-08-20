@@ -1,0 +1,15 @@
+#!/bin/bash
+
+while true; do
+	echo -n "$* "
+	if [ -z "$ask" ]; then
+		read ask
+	else
+		echo "$ask"
+	fi
+	if [[ "$ask" = "y" || "$ask" = "Y" || "$ask" = "yes" || "$ask" = "Yes" || "$ask" = "YES" ]]; then
+		exit 0
+	elif [[ "$ask" = "n" || "$ask" = "N" || "$ask" = "no" || "$ask" = "No" || "$ask" = "NO" ]]; then
+		exit 1
+	fi
+done

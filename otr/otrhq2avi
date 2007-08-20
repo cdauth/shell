@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <input avi file> [output avi file]" >&2
+	exit 1
+fi
+
+in="$1"
+if [ ! -z "$2" ]; then
+	out="$2"
+else
+	out="${in%.*}.avi"
+fi
+
+[ -z "$otrhq2avi_rm" ] && export otrhq2avi_rm="rm -i"
+
+mencoder "$in" -ovc xvid -xvidencopts fixed_quant=4 -oac copy -o "$out" && $video2avi_rm "$in"

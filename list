@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <list file> [aria2c arguments]" >&2
+	exit 1
+fi
+
+list_file="$1"
+shift
+
+cat "$list_file" | xargs -n1 -d '\n' aria2c "$@"

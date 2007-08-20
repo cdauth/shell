@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <input ogg file> [output mp3 file]" >&2
+	exit 1
+fi
+
+in="$1"
+if [ ! -z "$2" ]; then
+	out="$2"
+else
+	out="${in%.ogg}.mp3"
+fi
+
+[ -z "$ogg2mp3_rm" ] && export ogg2mp3_rm="rm -i"
+
+oggdec -o /dev/stdout "$in" 2>/dev/null | lame /dev/stdin "$out" && $ogg2mp3_rm "$in"

@@ -1,0 +1,29 @@
+#!/bin/bash
+
+append_edl=0
+if [ $# -gt 0 ]; then
+	append_edl=1
+fi
+
+args=$@
+
+while [ $# -gt 1 ]; do
+	if [[ $1 = "-edl" ]]; then
+		append_edl=0
+		break;
+	fi
+	shift
+done
+
+fname_cutlist="$(echo -n "$1" | sed -e 's/\.[a-zA-Z0-9]\+$//').cutlist"
+fname_edl="$(echo -n "$1" | sed -e 's/\.[a-zA-Z0-9]\+$//').edl"
+
+if [ ! -e "$fname_edl" -a -e "$fname_cutlist" ]; then
+	cutlist2edl "$fname_cutlist" "$fname_edl"
+fi
+
+if [ $append_edl -gt 0 -a -e "$fname_edl" ]; then
+	mplayer -edl "$fname_edl" $args
+else
+	mplayer $args
+fi

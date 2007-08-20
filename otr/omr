@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <OMR key file>" >&2
+	exit 1
+fi
+
+echo -n "OMR username (e-mail address): "
+read omr_username
+
+echo -n "OMR password: "
+read -s omr_password
+
+[ -z "$omr_rm" ] && export omr_rm="rm -i"
+
+for i in "$@"; do
+	in="$i"
+
+	omrdecoder -i "$in" -e "$omr_username" -p "$omr_password" && $omr_rm "$in"
+done

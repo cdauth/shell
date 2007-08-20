@@ -1,0 +1,38 @@
+#!/usr/bin/php
+<?php
+	if($argc < 2)
+	{
+		fputs(STDERR, "Usage: ".$argv[0]." <edl file>\n");
+		exit(1);
+	}
+
+	$fname = $argv[1];
+
+	if(!is_file($fname) || !is_readable($fname))
+	{
+		fputs(STDERR, "File ".$fname." is not readable.\n");
+		exit(1);
+	}
+
+	function s2t($s)
+	{
+		$s -= ($mseconds = ($s - floor($s)));
+		$s = ($s - ($seconds = $s%60)) / 60;
+		$s = ($s - ($minutes = $s%60)) / 60;
+		return $s.":".$minutes.":".$seconds.".".round($mseconds/.04);
+	}
+
+	$t = "";
+
+	$edl = file($fname);
+	foreach($edl as $n=>$line)
+	{
+		$l = preg_split("/\s+/", $line);
+		if($n > 0)
+			$t .= s2t($l[0]);
+		if($n < count($edl)-1)
+			$t .= ($n > 0 ? ',' : '').s2t($l[1])."-";
+	}
+
+	fputs(STDOUT, $t);
+?>

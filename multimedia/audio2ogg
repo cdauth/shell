@@ -1,0 +1,40 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <input audio file> [output ogg file]" >&2
+	exit 1
+fi
+
+tmp_dir="/tmp/audio2ogg-$USER"
+
+[ ! -d "$tmp_dir" ] && mkdir -p "$tmp_dir"
+
+in="$1"
+
+if [ ! -z "$2" ]; then
+	out="$2"
+else
+	out="${in%.*}.ogg"
+fi
+
+[ -z "$audio2ogg_rm" ] && export audio2ogg_rm="rm -i"
+
+
+tmp="$tmp_dir/$(date +%s).wav"
+mkfifo "$tmp"
+
+end() {
+	if [ "$(jobs | grep -c 'Running')" -gt 0 ]; then
+		cat "$tmp" > /dev/null
+	fi
+	rm -f "$tmp"
+	exit "$1"
+}
+
+trap 'end 1' 1 2 3 15
+
+
+mplayer -noconsolecontrols -ao "pcm:file=$tmp" -vo null "$in" >/dev/null 2>/dev/null &
+
+oggenc "$tmp" -o "$out" && $audio2ogg_rm "$in"
+end $?

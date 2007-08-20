@@ -1,0 +1,34 @@
+#!/bin/bash
+
+BACKUP_DIR=/backup
+
+if [ $# -lt 2 ]; then
+	echo "Usage: $0 <application name> <directory 1> [<directory 2>, ...]" >&2
+	exit 1
+fi
+
+BACKUP_DIR="$BACKUP_DIR/$1"
+shift
+FILES="$*"
+
+THIS_BACKUP="$BACKUP_DIR/$(date +%Y-%m/%d/%s)/"
+LAST_BACKUP_LINK="$BACKUP_DIR/last"
+LAST_BACKUP_DIR="$LAST_BACKUP_LINK/"
+
+test ! -e "$THIS_BACKUP" && ( mkdir -p "$THIS_BACKUP" || exit $? )
+
+if [ -e "$LAST_BACKUP_DIR" ]; then
+	rsync '-av' '--link-dest' "$LAST_BACKUP_DIR" $FILES "$THIS_BACKUP"
+	ret=$?
+else
+	rsync '-av' $FILES "$THIS_BACKUP"
+	ret=$?
+fi
+
+test ! $ret -eq 0 -a ! $ret -eq 24  && exit $ret
+
+test -L "$LAST_BACKUP_LINK" && ( rm -f "$LAST_BACKUP_LINK" || exit $? )
+
+ln -s "$THIS_BACKUP" "$LAST_BACKUP_LINK" || exit $?
+
+exit 0

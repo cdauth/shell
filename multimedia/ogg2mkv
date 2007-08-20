@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <ogg input file> [mkv output file]" >&2
+	exit 1
+fi
+
+in="$1"
+if [ ! -z "$2" ]; then
+	out="$2"
+else
+	out="${in%.ogg}.mkv"
+fi
+
+[ -z "$ogg2mkv_rm" ] && export ogg2mkv_rm="rm -i"
+
+mkvmerge -o "$out" -a 1 -d 0 -S "$in" --track-order 0:0,0:1 && $ogg2mkv_rm "$in"

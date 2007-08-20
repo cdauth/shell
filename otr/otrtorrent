@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <otrkey file name>" >&2
+	exit 1
+fi
+
+wget "http://81.95.11.2/xbt/xbt_torrent_create.php?filename=$1&userid=816207&mode=free&hash=bcd5742307d98df42c85a01b43056f50&user=pass"
+exit $?
