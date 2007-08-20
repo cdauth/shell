@@ -9,9 +9,9 @@ in="$1"
 if [ ! -z "$2" ]; then
 	out="$2"
 else
-	out="${in%.*}.avi"
+	out="${in%.HQ.avi}.avi"
 fi
 
 [ -z "$otrhq2avi_rm" ] && export otrhq2avi_rm="rm -i"
 
-mencoder "$in" -ovc xvid -xvidencopts fixed_quant=4 -oac copy -o "$out" && $video2avi_rm "$in"
+mencoder "$in" -ovc xvid -xvidencopts fixed_quant=4 -oac copy -o "$out" && $otrhq2avi_rm "$in"

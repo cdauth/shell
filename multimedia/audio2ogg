@@ -19,20 +19,34 @@ fi
 
 [ -z "$audio2ogg_rm" ] && export audio2ogg_rm="rm -i"
 
-
-tmp="$tmp_dir/$(date +%s).wav"
-mkfifo "$tmp"
+tmp_template="$tmp_dir/$(date +%s)"
 
 end() {
+	sleep 1
 	if [ "$(jobs | grep -c 'Running')" -gt 0 ]; then
 		cat "$tmp" > /dev/null
 	fi
-	rm -f "$tmp"
+	rm -f "$tmp" "$tmp_template.mp3" "$tmp_template.ogg"
 	exit "$1"
 }
 
 trap 'end 1' 1 2 3 15
 
+if [ -f "$in" ]; then
+	mime="$(file -bi "$in")"
+	if [[ "$mime" = "audio/mpeg" ]]; then
+		ln -s "$in" "$tmp_template.mp3"
+		mp32ogg "$tmp_template.mp3" || end $?
+		mv "$tmp_template.ogg" "$out"
+		end $?
+	elif [[ "$mime" = "application/ogg" ]]; then
+		cp "$in" "$out"
+		end $?
+	fi
+fi
+
+tmp="$tmp_template.wav"
+mkfifo "$tmp"
 
 mplayer -noconsolecontrols -ao "pcm:file=$tmp" -vo null "$in" >/dev/null 2>/dev/null &
 
