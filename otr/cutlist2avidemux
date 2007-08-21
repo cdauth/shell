@@ -56,8 +56,8 @@
 	}
 
 	$cuts = null;
-	if(isset($cutlist_content['General']) && isset($cutlist_content['General']['NoOfCuts']))
-		$cuts = $cutlist_content['General']['NoOfCuts'];
+	if(isset($cutlist_content['general']) && isset($cutlist_content['general']['noofcuts']))
+		$cuts = $cutlist_content['general']['noofcuts'];
 	else
 		$keys = array_keys($cutlist_content);
 
@@ -74,12 +74,12 @@
 		if($cuts === null)
 		{
 			$k = $keys[$i];
-			if(substr($k, 0, 3) != "Cut") continue;
+			if(substr($k, 0, 3) != "cut") continue;
 		}
 		else
 		{
-			$k = "Cut".$i;
-			if(!isset($cuts["Cut".$i]))
+			$k = "cut".$i;
+			if(!isset($cuts["cut".$i]))
 			{
 				fputs(STDERR, "Warning: Cut ".$i." does not exist.\n");
 				continue;
@@ -87,16 +87,16 @@
 		}
 		$v = &$cutlist_content[$k];
 
-		if(!isset($v['Start']) || (!isset($v['Duration']) && !isset($v['End'])))
+		if(!isset($v['start']) || (!isset($v['duration']) && !isset($v['end'])))
 		{
 			fputs(STDERR, "Warning: Invalid cut ".$i.".\n");
 			continue;
 		}
 
-		if(!isset($v['End']))
-			$v['End'] = $v['Start'] + $v['Duration'];
+		if(!isset($v['end']))
+			$v['end'] = $v['start'] + $v['duration'];
 
-		fwrite($fh, "app.addSegment(0, ".round($v['Start']*25).", ".round($v['Duration']*25).");\n");
+		fwrite($fh, "app.addSegment(0, ".round($v['start']*25).", ".round($v['duration']*25).");\n");
 	}
 
 	fwrite($fh, "app.video.setPostProc(3,3,0);\n");
