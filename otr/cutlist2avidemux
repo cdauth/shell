@@ -55,6 +55,17 @@
 		exit(1);
 	}
 
+	print_r($cutlist_content);
+	if(isset($cutlist_content["info"]))
+	{
+		if(isset($cutlist_content["info"]["actualcontent"]))
+			fputs(STDERR, $cutlist_content["info"]["actualcontent"]."\n");
+		if(isset($cutlist_content["info"]["usercomment"]))
+			fputs(STDERR, $cutlist_content["info"]["usercomment"]."\n");
+		if(isset($cutlist_content["info"]["suggestedmoviename"]))
+			fputs(STDERR, $cutlist_content["info"]["suggestedmoviename"]."\n");
+	}
+
 	$cuts = null;
 	if(isset($cutlist_content['general']) && isset($cutlist_content['general']['noofcuts']))
 		$cuts = $cutlist_content['general']['noofcuts'];
