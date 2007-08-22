@@ -32,7 +32,7 @@ fi
 [ -z "$otrcut_rm" ] && export otrcut_rm="rm -i"
 [ -z "$otrcut_mv" ] && export otrcut_mv="mv -i"
 
-[ ! -f "${fname_js}" -a -f "${fname_cutlist}" ] && cutlist2avidemux "${fname_cutlist}" "${fname_js}" "${fname_avi}"
+[ ! -f "${fname_js}" -a -f "${fname_cutlist}" ] && ( cutlist2avidemux "${fname_cutlist}" "${fname_js}" "${fname_avi}" || exit $? )
 
 ad_ret=1
 if [ -f "${fname_js}" ]; then

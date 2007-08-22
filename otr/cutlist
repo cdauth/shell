@@ -58,8 +58,8 @@
 	passthru("wget ".escapeshellarg($url)." -O ".escapeshellarg($cl));
 
 	$exit = 0;
-	fputs(STDOUT, "Now cut? ");
-	if(in_array(strtolower(trim(fgets(STDIN))), array("y", "yes")))
+	fputs(STDOUT, "Now cut? ".(isset($_ENV["ask"]) ? $_ENV["ask"]."\n" : ""));
+	if(in_array(strtolower(trim(isset($_ENV["ask"]) ? $_ENV["ask"] : fgets(STDIN))), array("y", "yes")))
 	{
 		fputs(STDOUT, "\n");
 		passthru("otrcut ".escapeshellarg($fname), $exit);

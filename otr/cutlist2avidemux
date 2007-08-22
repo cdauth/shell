@@ -57,11 +57,11 @@
 
 	if(isset($cutlist_content["info"]))
 	{
-		if(isset($cutlist_content["info"]["actualcontent"]))
+		if(isset($cutlist_content["info"]["actualcontent"]) && $cutlist_content["info"]["actualcontent"])
 			fputs(STDERR, $cutlist_content["info"]["actualcontent"]."\n");
-		if(isset($cutlist_content["info"]["usercomment"]))
+		if(isset($cutlist_content["info"]["usercomment"]) && $cutlist_content["info"]["usercomment"])
 			fputs(STDERR, $cutlist_content["info"]["usercomment"]."\n");
-		if(isset($cutlist_content["info"]["suggestedmoviename"]))
+		if(isset($cutlist_content["info"]["suggestedmoviename"]) && $cutlist_content["info"]["suggestedmoviename"])
 			fputs(STDERR, $cutlist_content["info"]["suggestedmoviename"]."\n");
 	}
 
