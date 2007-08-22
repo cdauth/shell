@@ -36,7 +36,9 @@ if [ -f "$in" ]; then
 	mime="$(file -bi "$in")"
 	if [[ "$mime" = "audio/mpeg" ]]; then
 		ln -s "$in" "$tmp_template.mp3"
+		cd "$tmp_dir"
 		mp32ogg "$tmp_template.mp3" || end $?
+		cd - >/dev/null
 		mv "$tmp_template.ogg" "$out"
 		end $?
 	elif [[ "$mime" = "application/ogg" ]]; then
