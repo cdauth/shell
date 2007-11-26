@@ -90,7 +90,7 @@ if [[ $play_all = 1 && $tvtotal_record = 0 ]]; then
 			if ( [[ "$avtype" = "flash" ]] && ! wget -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part_print-index.html" 1>/dev/null 2>/dev/null ) || ( [[ "$avtype" != "flash" ]] && ! wget -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part_print-${avtype}_$mode.html" 1>/dev/null 2>/dev/null ); then
 				break;
 			fi
-			echo "$video_url" | sed -e "s/-$old_part[-.]/-$part_print[-.]/" >> "$playlist"
+			echo "$video_url" | sed -r "s/-$old_part([-.])/-$part_print\1/" >> "$playlist"
 		done
 	fi
 
