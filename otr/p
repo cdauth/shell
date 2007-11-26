@@ -5,10 +5,10 @@ if [ $# -gt 0 ]; then
 	append_edl=1
 fi
 
-args=$@
+args="$@"
 
 while [ $# -gt 1 ]; do
-	if [[ $1 = "-edl" ]]; then
+	if [[ "$1" = "-edl" ]]; then
 		append_edl=0
 		break;
 	fi
@@ -23,7 +23,7 @@ if [ ! -e "$fname_edl" -a -e "$fname_cutlist" ]; then
 fi
 
 if [ $append_edl -gt 0 -a -e "$fname_edl" ]; then
-	mplayer -edl "$fname_edl" $args
+	mplayer -edl "$fname_edl" "$args"
 else
-	mplayer $args
+	mplayer "$args"
 fi

@@ -36,7 +36,7 @@ trap 'end 1' 1 2 3 15
 
 cd "$tmp_dir"
 
-mplayer -dumpaudio "$in" -dumpfile "$tmp_mp3" || end $?
+mplayer -noconsolecontrols -dumpaudio "$in" -dumpfile "$tmp_mp3" || end $?
 time audio2ogg_rm="rm -f" audio2ogg "$tmp_mp3" "$tmp_ogg" || end $?
 ffmpeg -vcodec copy -an -vtag xvid -i "$in" "$tmp_avi" || end $?
 
