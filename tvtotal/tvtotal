@@ -42,9 +42,9 @@ if [ $? -lt 0 ]; then
 		wget_content=`wget -O- http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part-${avtype}_$mode.html 2>/dev/null`
 	elif [ "$wget_content" ]; then
 		mode=broadband
-		if ! wget -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part-${avtype}_$mode.html" 1>/dev/null 2>/dev/null; then
+		if ! wget --spider -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part-${avtype}_$mode.html" 1>/dev/null 2>/dev/null; then
 			mode=midband
-			if ! wget -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part-${avtype}_$mode.html" 1>/dev/null 2>/dev/null; then
+			if ! wget --spider -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part-${avtype}_$mode.html" 1>/dev/null 2>/dev/null; then
 				mode=lowband
 			fi
 		fi
@@ -87,7 +87,7 @@ if [[ $play_all = 1 && $tvtotal_record = 0 ]]; then
 				part_print='0'$part_print
 				part_length=$[$part_length+1]
 			done
-			if ( [[ "$avtype" = "flash" ]] && ! wget -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part_print-index.html" 1>/dev/null 2>/dev/null ) || ( [[ "$avtype" != "flash" ]] && ! wget -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part_print-${avtype}_$mode.html" 1>/dev/null 2>/dev/null ); then
+			if ( [[ "$avtype" = "flash" ]] && ! wget --spider -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part_print-index.html" 1>/dev/null 2>/dev/null ) || ( [[ "$avtype" != "flash" ]] && ! wget --spider -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part_print-${avtype}_$mode.html" 1>/dev/null 2>/dev/null ); then
 				break;
 			fi
 			echo "$video_url" | sed -r "s/-$old_part([-.])/-$part_print\1/" >> "$playlist"
