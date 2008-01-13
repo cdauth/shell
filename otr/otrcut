@@ -6,8 +6,8 @@ if [ -z "$1" ]; then
 fi
 
 fname_avi="${1}"
-fname_p="${fname_avi%%.avi}"
-fname_p="${fname_p%%.wmv}"
+fname_p="${fname_avi%.*}"
+fname_mkv="${fname_p}.mkv"
 fname_cutlist="${fname_p}.cutlist"
 fname_edl="${fname_p}.edl"
 fname_js="${fname_p}.avidemux.js"
@@ -30,32 +30,26 @@ else
 fi
 
 [ -z "$otrcut_rm" ] && export otrcut_rm="rm -i"
-[ -z "$otrcut_mv" ] && export otrcut_mv="mv -i"
 
 [ ! -f "${fname_js}" -a -f "${fname_cutlist}" ] && ( cutlist2avidemux "${fname_cutlist}" "${fname_js}" "${fname_avi}" || exit $? )
 
 ad_ret=1
 if [ -f "${fname_js}" ]; then
 	echo "Cutting..."
-	"$avidemux" --autoindex --force-smart --run "$fname_js" --quit << EOF 2>&1 | grep ETA
-y
-y
-y
-EOF
+	"$avidemux" --nogui --force-smart --run "$fname_js" --quit
 	ad_ret=${PIPESTATUS[0]}
 	[[ "$ad_ret" = 0 ]] && echo "Finished" || echo "Failed"
 elif [ ! -f "${fname_js}" -a ! -z "$DISPLAY" ]; then
 	"$avidemux" "${fname_avi}"
 	ad_ret=$?
 fi
-if [[ "$ad_ret" = 0 ]] && [ -f "${fname_tmp}" ]
+if [[ "$ad_ret" = 0 ]] && ( ( [[ "${fname_avi}" = "${fname_mkv}" ]] && [ -f "${fname_mkv}.tmp" ] ) || ( [[ "${fname_avi}" != "${fname_mkv}" ]] && [ -f "${fname_mkv}" ] ) )
 then
-	$otrcut_mv "${fname_tmp}" "${fname_avi}"
+	$otrcut_rm "${fname_avi}"
+	if [ "${fname_avi}" = "${fname_mkv}" ]; then
+		mv "${$fname_mkv}.tmp" "${fname_mkv}"
+	fi
 	[ -f "${fname_edl}" ] && $otrcut_rm "${fname_edl}"
 	[ -f "${fname_js}" ] && $otrcut_rm "${fname_js}"
 	[ -f "${fname_cutlist}" ] && $otrcut_rm "${fname_cutlist}"
-fi
-
-if ask "Convert to mkv?"; then
-	divx2mkv "${fname_avi}"
 fi
