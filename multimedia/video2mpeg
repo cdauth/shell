@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <input video file> [output mpg file]" >&2
+	exit 1
+fi
+
+in="$1"
+if [ ! -z "$2" ]; then
+	out="$2"
+else
+	out="${in%.*}.mpg"
+fi
+
+[ -z "$video2mpeg_rm" ] && export video2mpeg_rm="rm -i"
+
+ffmpeg -i "$in" "$out" && $video2mpeg_rm "$in"

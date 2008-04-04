@@ -1,0 +1,36 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <input video file> [output mkv file]" >&2
+	exit 1
+fi
+
+tmp_dir="/tmp/video2mkv-$USER"
+[ ! -d "$tmp_dir" ] && mkdir -p "$tmp_dir"
+
+in="$1"
+if [ ! -z "$2" ]; then
+	out="$2"
+else
+	out="${in%.*}.mkv"
+fi
+
+tmp_template="$tmp_dir/$(date +%s)"
+tmp_ogg="$tmp_template.ogg"
+tmp_avi="$tmp_template.avi"
+
+[ -z "$video2mkv_rm" ] && export video2mkv_rm="rm -i"
+
+end() {
+	rm -f "$tmp_ogg"
+	rm -f "$tmp_avi"
+	exit "$1"
+}
+
+trap 'end 1' 1 2 3 15
+
+audio2ogg_rm="/bin/true" audio2ogg "$in" "$tmp_ogg" || end $?
+mencoder "$in" -ovc xvid -xvidencopts fixed_quant=4 -nosound -o "$tmp_avi" || end $?
+
+mkvmerge -o "$out" -d 0 -A -S "$tmp_avi" -a 0 -D -S "$tmp_ogg" --track-order 1:0,0:0 && $video2mkv_rm "$in"
+end $?

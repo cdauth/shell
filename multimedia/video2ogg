@@ -1,0 +1,17 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <input video file> [output ogg file]" >&2
+	exit 1
+fi
+
+in="$1"
+if [ ! -z "$2" ]; then
+	out="$2"
+else
+	out="${in%.*}.ogg"
+fi
+
+[ -z "$video2ogg_rm" ] && export video2ogg_rm="rm -i"
+
+ffmpeg2theora -o "$out" "$in" && $video2ogg_rm "$in"
