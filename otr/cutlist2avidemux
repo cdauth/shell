@@ -130,7 +130,7 @@
 	else
 		$out[] = "mkv";
 	$out = implode(".", $out);
-	fwrite($fh, "setSuccess(app.save('".preg_replace("/[\\\\']/", "\\\\$0", $out."'));\n");
+	fwrite($fh, "setSuccess(app.save('".preg_replace("/[\\\\']/", "\\\\$0", $out)."'));\n");
 	exit(0);
 
 function readINIfile ($filename, $commentchar) {
