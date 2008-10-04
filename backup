@@ -1,7 +1,7 @@
 #!/bin/bash
 
 [ -z "$BACKUP_DIR" ] && export BACKUP_DIR="/backup"
-[ -z "$BACKUP_RSYNC" ] && export BACKUP_RSYNC="rsync -v"
+[ -z "$BACKUP_RSYNC" ] && export BACKUP_RSYNC="rsync -v --progress"
 
 if [ $# -lt 2 ]; then
 	echo "Usage: $0 <application name> <directory 1> [<directory 2>, ...]" >&2
@@ -19,10 +19,10 @@ LAST_BACKUP_DIR="$LAST_BACKUP_LINK/"
 test ! -e "$THIS_BACKUP" && ( mkdir -p "$THIS_BACKUP" || exit $? )
 
 if [ -e "$LAST_BACKUP_DIR" ]; then
-	$BACKUP_RSYNC '-a' '--link-dest' "$LAST_BACKUP_DIR" $FILES "$THIS_BACKUP"
+	$BACKUP_RSYNC '-aAHSX' '--link-dest' "$LAST_BACKUP_DIR" $FILES "$THIS_BACKUP"
 	ret=$?
 else
-	$BACKUP_RSYNC '-a' $FILES "$THIS_BACKUP"
+	$BACKUP_RSYNC '-aAHSX' $FILES "$THIS_BACKUP"
 	ret=$?
 fi
 
