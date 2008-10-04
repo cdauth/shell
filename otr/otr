@@ -5,11 +5,15 @@ if [ -z "$1" ]; then
 	exit 1
 fi
 
-echo -n "OTR username (e-mail address): "
-read otr_username
+if [ -z "$otr_username" ]; then
+	echo -n "OTR username (e-mail address): "
+	read otr_username
+fi
 
-echo -n "OTR password: "
-read -s otr_password
+if [ -z "$otr_password" ]; then
+	echo -n "OTR password: "
+	read -s otr_password
+fi
 
 echo
 
