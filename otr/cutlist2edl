@@ -14,7 +14,7 @@
 		fputs(STDERR, "cutlist file is not readable.\n");
 		exit(1);
 	}
-	
+
 	if($EDL)
 	{
 		if(file_exists($EDL))
@@ -48,7 +48,7 @@
 		exit(1);
 	}
 
-	$cutlist_content = parse_ini_file($CUTLIST, true);
+	$cutlist_content = readINIfile($CUTLIST, ";");
 	if(!$cutlist_content)
 	{
 		fputs(STDERR, "cutlist parsing failed.\n");
@@ -56,25 +56,25 @@
 	}
 
 	$cuts = null;
-	if(isset($cutlist_content['General']) && isset($cutlist_content['General']['NoOfCuts']))
-		$cuts = $cutlist_content['General']['NoOfCuts'];
+	if(isset($cutlist_content['general']) && isset($cutlist_content['general']['noofcuts']))
+		$cuts = $cutlist_content['general']['noofcuts'];
 	else
 		$keys = array_keys($cutlist_content);
 
 	$edl_output = array();
 	$edl_i = 0;
-	
+
 	for($i=0; ($cuts === null) ? $i<count($keys) : $i<$cuts; $i++)
 	{
 		if($cuts === null)
 		{
 			$k = $keys[$i];
-			if(substr($k, 0, 3) != "Cut") continue;
+			if(substr($k, 0, 3) != "cut") continue;
 		}
 		else
 		{
-			$k = "Cut".$i;
-			if(!isset($cuts["Cut".$i]))
+			$k = "cut".$i;
+			if(!isset($cuts["cut".$i]))
 			{
 				fputs(STDERR, "Warning: Cut ".$i." does not exist.\n");
 				continue;
@@ -82,19 +82,19 @@
 		}
 		$v = &$cutlist_content[$k];
 
-		if(!isset($v['Start']) || (!isset($v['Duration']) && !isset($v['End'])))
+		if(!isset($v['start']) || (!isset($v['duration']) && !isset($v['end'])))
 		{
 			fputs(STDERR, "Warning: Invalid cut ".$i.".\n");
 			continue;
 		}
 
-		if(!isset($v['End']))
-			$v['End'] = $v['Start'] + $v['Duration'];
+		if(!isset($v['end']))
+			$v['end'] = $v['start'] + $v['duration'];
 
 		if($edl_i == 0)
 			$edl_output[$edl_i] = array(0);
-		$edl_output[$edl_i][1] = $v['Start'];
-		$edl_output[++$edl_i] = array($v['End']);
+		$edl_output[$edl_i][1] = $v['start'];
+		$edl_output[++$edl_i] = array($v['end']);
 	}
 
 	if(count($edl_output) > 0)
@@ -108,4 +108,48 @@
 
 	fclose($fh);
 	exit(0);
+
+function readINIfile ($filename, $commentchar) {
+  $array1 = file($filename);
+  $section = '';
+  for ($line_num = 0; $line_num <= sizeof($array1); $line_num++) {
+   $filedata = $array1[$line_num];
+   $dataline = trim($filedata);
+   $firstchar = substr($dataline, 0, 1);
+   if ($firstchar!=$commentchar && $dataline!='') {
+     //It's an entry (not a comment and not a blank line)
+     if ($firstchar == '[' && substr($dataline, -1, 1) == ']') {
+       //It's a section
+       $section = strtolower(substr($dataline, 1, -1));
+     }else{
+       //It's a key...
+       $delimiter = strpos($dataline, '=');
+       if ($delimiter > 0) {
+         //...with a value
+         $key = strtolower(trim(substr($dataline, 0, $delimiter)));
+         $array2[$section][$key] = '';
+         $value = trim(substr($dataline, $delimiter + 1));
+         while (substr($value, -1, 1) == '\\') {
+             //...value continues on the next line
+             $value = substr($value, 0, strlen($value)-1);
+             $array2[$section][$key] .= stripcslashes($value);
+             $line_num++;
+             $value = trim($array1[$line_num]);
+         }
+         $array2[$section][$key] .= stripcslashes($value);
+         $array2[$section][$key] = trim($array2[$section][$key]);
+         if (substr($array2[$section][$key], 0, 1) == '"' && substr($array2[$section][$key], -1, 1) == '"') {
+            $array2[$section][$key] = substr($array2[$section][$key], 1, -1);
+         }
+       }else{
+         //...without a value
+         $array2[$section][strtolower(trim($dataline))]='';
+       }
+     }
+   }else{
+     //It's a comment or blank line.  Ignore.
+   }
+  }
+  return $array2;
+}
 ?>

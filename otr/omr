@@ -5,11 +5,15 @@ if [ -z "$1" ]; then
 	exit 1
 fi
 
-echo -n "OMR username (e-mail address): "
-read omr_username
+if [ -z "$omr_username" ]; then
+	echo -n "OMR username (e-mail address): "
+	read omr_username
+fi
 
-echo -n "OMR password: "
-read -s omr_password
+if [ -z "$omr_password" ]; then
+	echo -n "OMR password: "
+	read -s omr_password
+fi
 
 [ -z "$omr_rm" ] && export omr_rm="rm -i"
 
