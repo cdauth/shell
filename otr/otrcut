@@ -7,27 +7,28 @@ fi
 
 fname_avi="${1}"
 fname_p="${fname_avi%.*}"
-fname_mkv="${fname_p}.mkv"
+#fname_mkv="${fname_p}.mkv"
+fname_mkv="${fname_p}.cut.avi"
 fname_cutlist="${fname_p}.cutlist"
 fname_edl="${fname_p}.edl"
 fname_js="${fname_p}.avidemux.js"
 fname_tmp="${fname_avi}.tmp"
 
-if [ ! -z "$DISPLAY" ]; then
-	if which avidemux2_qt4 >/dev/null 2>/dev/null; then
-		avidemux="avidemux2_qt4"
-	elif which avidemux2_gtk >/dev/null 2>/dev/null; then
-		avidemux="avidemux2_gtk"
-	elif which avidemux2 >/dev/null 2>/dev/null; then
-		avidemux="avidemux2"
-	elif which avidemux >/dev/null 2>/dev/null; then
-		avidemux="avidemux"
-	else
-		avidemux="avidemux2_cli"
-	fi
-else
+#if [ ! -z "$DISPLAY" ]; then
+#	if which avidemux2_qt4 >/dev/null 2>/dev/null; then
+#		avidemux="avidemux2_qt4"
+#	elif which avidemux2_gtk >/dev/null 2>/dev/null; then
+#		avidemux="avidemux2_gtk"
+#	elif which avidemux2 >/dev/null 2>/dev/null; then
+#		avidemux="avidemux2"
+#	elif which avidemux >/dev/null 2>/dev/null; then
+#		avidemux="avidemux"
+#	else
+#		avidemux="avidemux2_cli"
+#	fi
+#else
 	avidemux="avidemux2_cli"
-fi
+#fi
 
 [ -z "$otrcut_rm" ] && export otrcut_rm="rm -i"
 
@@ -36,7 +37,7 @@ fi
 ad_ret=1
 if [ -f "${fname_js}" ]; then
 	echo "Cutting..."
-	"$avidemux" --nogui --force-smart --run "$fname_js" --quit
+	"$avidemux" --nogui --force-smart --run "$fname_js" --save "${fname_mkv}" --quit
 	ad_ret=${PIPESTATUS[0]}
 	[[ "$ad_ret" = 0 ]] && echo "Finished" || echo "Failed"
 elif [ ! -f "${fname_js}" -a ! -z "$DISPLAY" ]; then

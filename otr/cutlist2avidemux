@@ -113,13 +113,16 @@
 	fwrite($fh, "app.video.setFps1000(25000);\n");
 	fwrite($fh, "app.video.codec(\"Copy\",\"CQ=4\",\"0 \");\n");
 	fwrite($fh, "app.audio.reset();\n");
-	fwrite($fh, "app.audio.codec(\"vorbis\",128,8,\"01 00 00 00 00 00 40 40 \");\n");
+	#fwrite($fh, "app.audio.codec(\"vorbis\",128,8,\"01 00 00 00 00 00 40 40 \");\n");
+	fwrite($fh, "app.audio.codec(\"copy\",128,0,\"\");\n");
 	fwrite($fh, "app.audio.normalizeMode=0;\n");
 	fwrite($fh, "app.audio.normalizeValue=0;\n");
 	fwrite($fh, "app.audio.delay=0;\n");
 	fwrite($fh, "app.audio.mixer(\"NONE\");\n");
-	fwrite($fh, "app.setContainer(\"MATROSKA\");\n");
-	$out = explode(".", $film);
+	fwrite($fh, "app.audio.scanVBR();\n"); # Only for audio copy mode
+	#fwrite($fh, "app.setContainer(\"MATROSKA\");\n");
+	fwrite($fh, "app.setContainer(\"AVI\");\n");
+	/*$out = explode(".", $film);
 	if(count($out) > 1)
 	{
 		if(strtolower($out[count($out)-1]) == "mkv")
@@ -130,7 +133,7 @@
 	else
 		$out[] = "mkv";
 	$out = implode(".", $out);
-	fwrite($fh, "setSuccess(app.save('".preg_replace("/[\\\\']/", "\\\\$0", $out)."'));\n");
+	fwrite($fh, "setSuccess(app.save('".preg_replace("/[\\\\']/", "\\\\$0", $out)."'));\n");*/
 	exit(0);
 
 function readINIfile ($filename, $commentchar) {
