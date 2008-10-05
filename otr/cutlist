@@ -50,7 +50,7 @@
 		$rating_author = $item->getElementsByTagName("ratingbyauthor")->item(0)->firstChild->data;
 		$rating_users = $item->getElementsByTagName("rating")->item(0)->firstChild->data;
 		$title = $item->getElementsByTagName("name")->item(0)->firstChild->data;
-		if(preg_match("/^".preg_quote(preg_replace("/(\\.(otrkey|avi|wmv))?$/", "", $fname), "/")."\\.(\\d+\\.)?cutlist\$/i", $title))
+		if(preg_match("/^".preg_quote(preg_replace("/(\\.(otrkey|avi|wmv))?$/", "", $fname), "/")."(\\.\\d+)*\\.cutlist\$/i", $title))
 		{
 			if(strlen($rating_users) == 0)
 				$rating = $rating_author-1.25;
