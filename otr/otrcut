@@ -46,9 +46,13 @@ elif [ ! -f "${fname_js}" -a ! -z "$DISPLAY" ]; then
 fi
 if [[ "$ad_ret" = 0 ]] && ( ( [[ "${fname_avi}" = "${fname_mkv}" ]] && [ -f "${fname_mkv}.tmp" ] ) || ( [[ "${fname_avi}" != "${fname_mkv}" ]] && [ -f "${fname_mkv}" ] ) )
 then
-	$otrcut_rm "${fname_avi}"
-	if [ "${fname_avi}" = "${fname_mkv}" ]; then
-		mv "${$fname_mkv}.tmp" "${fname_mkv}"
+	if [ "$(stat -c '%s' "${fname_mkv}")" -lt "$[$(stat -c '%s' "${fname_avi}")/2]" ]; then
+		echo "Cut file is unusually small, not removing."
+	else
+		$otrcut_rm "${fname_avi}"
+		if [ "${fname_avi}" = "${fname_mkv}" ]; then
+			mv "${$fname_mkv}.tmp" "${fname_mkv}"
+		fi
 	fi
 	[ -f "${fname_edl}" ] && $otrcut_rm "${fname_edl}"
 	[ -f "${fname_js}" ] && $otrcut_rm "${fname_js}"
