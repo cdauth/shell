@@ -13,7 +13,7 @@ if [[ ! "$USERNAME" ]]; then
 	read USERNAME
 fi
 
-/home/candid/bin/ssh-auth
+ssh-auth
 
 ssh -CX "$USERNAME@$HOST"
 exit $?

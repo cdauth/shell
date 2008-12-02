@@ -1,0 +1,12 @@
+#!/bin/bash
+
+IDENTITY=~/.ssh/id_rsa
+
+for i in $(ssh-add -L | awk -F" " '{ print $3; }'); do
+	if [[ "$i" = "$IDENTITY" ]]; then
+		exit 0
+	fi
+done
+
+ssh-add ~/.ssh/id_rsa
+exit $?
