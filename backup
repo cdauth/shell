@@ -2,6 +2,7 @@
 
 [ -z "$BACKUP_DIR" ] && export BACKUP_DIR="/backup"
 [ -z "$BACKUP_RSYNC" ] && export BACKUP_RSYNC="rsync -v --progress"
+[ -z "$BACKUP_RSYNC_FLAGS" ] && export BACKUP_RSYNC_FLAGS="-AX"
 
 if [ $# -lt 2 ]; then
 	echo "Usage: $0 <application name> <directory 1> [<directory 2>, ...]" >&2
@@ -12,20 +13,20 @@ BACKUP_DIR="$BACKUP_DIR/$1"
 shift
 FILES="$*"
 
-date_param=""
-[ ! -z "$BACKUP_TIME" ] && date_param="-d$BACKUP_TIME"
+date_param="date"
+[ ! -z "$BACKUP_TIME" ] && date_param="date -d$BACKUP_TIME"
 
-THIS_BACKUP="$BACKUP_DIR/$(date "$date_param" +%Y-%m-%dT%H:%M:%S)/"
+THIS_BACKUP="$BACKUP_DIR/$($date_param +%Y-%m-%dT%H:%M:%S)/"
 LAST_BACKUP_LINK="$BACKUP_DIR/last"
 LAST_BACKUP_DIR="$LAST_BACKUP_LINK/"
 
 test ! -e "$THIS_BACKUP" && ( mkdir -p "$THIS_BACKUP" || exit $? )
 
 if [ -e "$LAST_BACKUP_DIR" ]; then
-	$BACKUP_RSYNC '-aAHS' '--link-dest' "$LAST_BACKUP_DIR" $FILES "$THIS_BACKUP"
+	$BACKUP_RSYNC $BACKUP_RSYNC_FLAGS '-aHS' '--link-dest' "$LAST_BACKUP_DIR" $FILES "$THIS_BACKUP"
 	ret=$?
 else
-	$BACKUP_RSYNC '-aAHS' $FILES "$THIS_BACKUP"
+	$BACKUP_RSYNC $BACKUP_RSYNC_FLAGS '-aHS' $FILES "$THIS_BACKUP"
 	ret=$?
 fi
 
