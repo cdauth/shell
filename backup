@@ -20,7 +20,12 @@ THIS_BACKUP="$BACKUP_DIR/$($date_param +%Y-%m-%dT%H:%M:%S)/"
 LAST_BACKUP_LINK="$BACKUP_DIR/last"
 LAST_BACKUP_DIR="$LAST_BACKUP_LINK/"
 
-test ! -e "$THIS_BACKUP" && ( mkdir -p "$THIS_BACKUP" || exit $? )
+if [ -e "$THIS_BACKUP" ]; then
+	echo "Backup directory $THIS_BACKUP already exists."
+	exit 1
+fi
+
+mkdir -p "$THIS_BACKUP" || exit $?
 
 if [ -e "$LAST_BACKUP_DIR" ]; then
 	$BACKUP_RSYNC $BACKUP_RSYNC_FLAGS '-aHS' '--link-dest' "$LAST_BACKUP_DIR" $FILES "$THIS_BACKUP"
@@ -30,7 +35,10 @@ else
 	ret=$?
 fi
 
-test ! $ret -eq 0 -a ! $ret -eq 24  && exit $ret
+if [ ! $ret -eq 0 -a ! $ret -eq 24 ]; then
+	rm -rf "$THIS_BACKUP"
+	exit $ret
+fi
 
 test -L "$LAST_BACKUP_LINK" && ( rm -f "$LAST_BACKUP_LINK" || exit $? )
 
