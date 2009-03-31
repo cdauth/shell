@@ -15,7 +15,7 @@
 		exit(1);
 	}
 
-	$url = "http://cutlist.de/getxml.php?version=0.9.8.0&ofsb=".filesize($fname);
+	$url = "http://cutlist.at/getxml.php?version=0.9.8.0&ofsb=".filesize($fname);
 	$tmp = "/tmp/cutlists.xml.".time();
 	$cl = preg_replace("/\.(wmv|avi)(\.otrkey)?$/", ".cutlist", $fname);
 
@@ -83,7 +83,7 @@
 		exit(3);
 	}
 
-	$url = "http://cutlist.de/getfile.php?id=".$c[$n];
+	$url = "http://cutlist.at/getfile.php?id=".$c[$n];
 	passthru("wget ".escapeshellarg($url)." -O ".escapeshellarg($cl));
 
 	$exit = 0;
