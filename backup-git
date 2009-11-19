@@ -23,7 +23,7 @@ if [ ! -e "$BACKUP_DIR/.git" ]; then
 	cd - >/dev/null
 fi
 
-$BACKUP_RSYNC --delete --exclude="/.git" $BACKUP_RSYNC_FLAGS '-aHS' $FILES "$THIS_BACKUP"
+$BACKUP_RSYNC --delete --exclude="/.git" $BACKUP_RSYNC_FLAGS '-aHS' $FILES "$BACKUP_DIR"
 ret=$?
 
 if [ ! $ret -eq 0 -a ! $ret -eq 24 ]; then
