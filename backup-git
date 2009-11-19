@@ -1,0 +1,38 @@
+#!/bin/bash
+
+[ -z "$BACKUP_DIR" ] && export BACKUP_DIR="/backup"
+[ -z "$BACKUP_RSYNC" ] && export BACKUP_RSYNC="rsync -v --progress"
+[ -z "$BACKUP_RSYNC_FLAGS" ] && export BACKUP_RSYNC_FLAGS="-AX"
+[ -z "$BACKUP_GIT" ] && export BACKUP_GIT="git"
+[ -z "$BACKUP_MESSAGE" ] && export BACKUP_MESSAGE="Automated backup"
+
+if [ $# -lt 2 ]; then
+	echo "Usage: $0 <application name> <directory 1> [<directory 2>, ...]" >&2
+	exit 1
+fi
+
+BACKUP_DIR="$BACKUP_DIR/$1-git/"
+shift
+FILES="$*"
+
+[ ! -e "$BACKUP_DIR" ] && mkdir -p "$BACKUP_DIR"
+
+if [ ! -e "$BACKUP_DIR/.git" ]; then
+	cd "$BACKUP_DIR"
+	$BACKUP_GIT init
+	cd - >/dev/null
+fi
+
+$BACKUP_RSYNC --delete --exclude="/.git" $BACKUP_RSYNC_FLAGS '-aHS' $FILES "$THIS_BACKUP"
+ret=$?
+
+if [ ! $ret -eq 0 -a ! $ret -eq 24 ]; then
+	exit $ret
+fi
+
+cd "$BACKUP_DIR"
+
+$BACKUP_GIT add .
+$BACKUP_GIT commit -am "$BACKUP_MESSAGE"
+
+exit $?
