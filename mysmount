@@ -1,0 +1,21 @@
+#!/bin/bash
+cd /home/cdauth/dev
+pmount "$1"
+status=$?
+dev=
+if [ $status -eq 5 ]; then
+        echo "Exit code 5, trying using /sbin/cryptsetup"
+        dev=${!#}
+        /sbin/cryptsetup luksOpen "${dev}" "${dev}" && pmount "/dev/mapper/${dev}" "${dev}"
+	status=$?
+fi
+if [ $status -eq 0 ]; then
+	cd /media/"$1"
+	IFS="
+" HISTFILE= bash
+	cd /
+	pumount "$1"
+	if [[ "${dev}" ]]; then
+		/sbin/cryptsetup luksClose "${dev}"
+	fi
+fi

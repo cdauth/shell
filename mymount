@@ -1,0 +1,8 @@
+#!/bin/bash
+cd /home/cdauth/dev
+pmount "$@"
+if [ $? -eq 5 ]; then
+	echo "Exit code 5, trying using /sbin/cryptsetup"
+	dev=${!#}
+	/sbin/cryptsetup luksOpen "${dev}" "${dev}" && pmount "/dev/mapper/${dev}" "${dev}"
+fi

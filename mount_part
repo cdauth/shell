@@ -1,0 +1,13 @@
+#!/bin/sh
+FILE=$1
+PART=$2
+MOUNTPOINT=$3
+DATA=`/sbin/sfdisk -d $FILE | grep $FILE$PART`
+echo $DATA
+SECT_START=`echo $DATA | perl -pi -e 's/.*start=\s*(\d*),.*/$1/'`
+SECT_COUNT=`echo $DATA | perl -pi -e 's/.*size=\s*(\d*),.*/$1/'`
+COMMAND="mount -o ro,loop,offset=$(($SECT_START * 512)),sizelimit=$(($SECT_COUNT * 512)) $FILE $MOUNTPOINT"
+echo $COMMAND
+echo -n "3..."; sleep 1; echo -n " 2..."; sleep 1; echo -n " 1..."; sleep 1; echo "0"
+$COMMAND
+exit $?

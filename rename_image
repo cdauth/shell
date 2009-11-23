@@ -1,0 +1,56 @@
+#!/usr/bin/php
+<?php
+	$files = $argv;
+	array_shift($files);
+	$ok = 0;
+	foreach($files as $old_fname)
+	{
+		$rename_type = $new_fname = null;
+
+		if(!file_exists($old_fname)) fputs(STDERR, $old_fname." does not exist.\n");
+		elseif(!is_file($old_fname)) fputs(STDERR, $old_fname." is not a file.\n");
+		elseif(!is_readable($old_fname)) fputs(STDERR, $old_fname." is not readable.\n");
+		else
+		{
+			$exif = read_exif_data($old_fname, "EXIF");
+			if(is_array($exif) && isset($exif["DateTime"]) && preg_match("/^(\d{1,4}):(\d{1,2}):(\d{1,2})\s+(\d{1,2}):(\d{1,2}):(\d{1,2})/", $exif["DateTime"], $m))
+			{
+				$new_fname = $m[1]."-".$m[2]."-".$m[3]."T".$m[4].":".$m[5].":".$m[6];
+				$rename_type = "EXIF";
+			}
+			else
+			{
+				$new_fname = strftime("%Y-%m-%dT%H:%M:%S", filemtime($old_fname));
+				$rename_type = "mtime";
+			}
+
+			if($new_fname !== null)
+			{
+				if(isset($_ENV["rename_image_id"])) $new_fname .= "_".$_ENV["rename_image_id"];
+				$new_fname = dirname($old_fname)."/".$new_fname;
+				if(preg_match("/.(\.[^.]+)$/", $old_fname, $m)) $new_fname .= $m[1];
+				if(realpath($old_fname) == realpath($new_fname))
+				{
+					fputs(STDERR, "No need to rename ".$old_fname." (".$rename_type.").\n");
+					$ok++;
+				}
+				elseif(file_exists($new_fname))
+					fputs(STDERR, "Could not rename ".$old_fname." to ".$new_fname." (".$rename_type."): File exists.\n");
+				elseif(!rename($old_fname, $new_fname))
+					fputs(STDERR, "Error renaming ".$old_fname." to ".$new_fname." (".$rename_type.").\n");
+				else
+				{
+					fputs(STDERR, "Renamed ".$old_fname." to ".$new_fname." (".$rename_type.").\n");
+					$ok++;
+				}
+			}
+		}	
+	}
+
+	if($ok == 0)
+		exit(1);
+	elseif($ok < count($files))
+		exit(2);
+	else
+		exit(0);
+?>

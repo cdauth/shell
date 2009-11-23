@@ -1,0 +1,4 @@
+export QEMU_AUDIO_DRV=sdl
+export SDL_VIDEO_X11_DGAMOUSE=0
+qemu -smp 2 -localtime -soundhw all -net nic -net user -smb /home/smb -usb "$@"
+exit $?
