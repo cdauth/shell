@@ -1,7 +1,7 @@
 #!/bin/bash
 
 [ -z "$BACKUP_DIR" ] && export BACKUP_DIR="/backup"
-[ -z "$BACKUP_RSYNC" ] && export BACKUP_RSYNC="rsync -v --progress"
+[ -z "$BACKUP_RSYNC" ] && export BACKUP_RSYNC="rsync -zv --progress"
 [ -z "$BACKUP_RSYNC_FLAGS" ] && export BACKUP_RSYNC_FLAGS="-AX"
 
 if [ $# -lt 2 ]; then
