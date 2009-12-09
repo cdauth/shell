@@ -1,0 +1,6 @@
+sudo truecrypt -t --filesystem=none -k "" --protect-hidden=no ~/dev/"$1-tc" || exit $?
+while [ ! -e ~/dev/"$1" ]; do
+	sleep .2
+done
+mysmount cdauth-5-secret
+sudo truecrypt -t --filesystem=none -d ~/dev/"$1-tc"
