@@ -13,6 +13,7 @@ if [ $status -eq 0 ]; then
 	cd /media/"$1"
 	IFS="
 " HISTFILE= bash
+	clear
 	cd /
 	pumount "$1"
 	if [[ "${dev}" ]]; then
