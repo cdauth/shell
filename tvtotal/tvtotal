@@ -1,115 +1,98 @@
 #!/bin/bash
 
-if [[ $# < 1 ]]; then
-	echo "Usage: $0 <episode> [part]"
-	echo
-	echo "Environment:"
-	echo '$tvtotal_mplayer: the media player command to be used (usually mplayer)'
-	echo '$tvtotal_record: 1 if the file(s) should be recorded instead of being played'
-	exit 1
-fi
+get_video_urls()
+{
+	episode="${1}"
 
-[ -z "$tvtotal_mplayer" ] && export tvtotal_mplayer="mplayer -cache-min 2"
-[ -z "$tvtotal_record" ] && export tvtotal_record=0
+	listing="$(wget -O- -o/dev/null "http://tvtotal.prosieben.de/tvtotal/includes/php/ajax.php?action=getSendungById&contentType=video&showId=${episode}-00&teaserType=video&tabbing=sendung")"
 
-episode=$1
-if [[ $# < 2 ]]; then
-	part="01"
-	play_all=1
-else
-	part=$2
-	play_all=0
-fi
-episode_length=`echo $episode | awk '{ print length($0); }'`
-part_length=`echo $part | awk '{ print length($0); }'`
-while [[ $episode_length < 4 ]]; do
-	episode='0'$episode
-	episode_length=$[$episode_length+1]
-done
-while [[ $part_length < 2 ]]; do
-	part='0'$part
-	part_length=$[$part_length+1]
-done
+	date="$(echo "$listing" | grep 'related_linktext_headright' | head -1 | cut -d '>' -f2 | cut -d '<' -f1 | sed -e 's/\./\t/g')"
+	day="$(echo "${date}" | cut -f1)"
+	month="$(echo "${date}" | cut -f2)"
+	year="$(echo "${date}" | cut -f3)"
 
-mode=lowband
-avtype=flash
-wget_content="$(wget -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part-index.html" 2>/dev/null)"
-if [ $? -lt 0 ]; then
-	avtype=wm
-	wget_content=`wget -O- http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part-${avtype}_$mode.html 2>/dev/null`
-	if [ $? -lt 0 ]; then
-		avtype=rm
-		wget_content=`wget -O- http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part-${avtype}_$mode.html 2>/dev/null`
-	elif [ "$wget_content" ]; then
-		mode=broadband
-		if ! wget --spider -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part-${avtype}_$mode.html" 1>/dev/null 2>/dev/null; then
-			mode=midband
-			if ! wget --spider -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part-${avtype}_$mode.html" 1>/dev/null 2>/dev/null; then
-				mode=lowband
-			fi
-		fi
+	parts="$(echo "${listing}" | grep '<img' | cut -d'_' -f7 | cut -d'.' -f1)"
+	echo "${parts}" | while read it; do
+		echo -e "${it}\thttp://c11021-o.l.core.cdn.streamfarm.net/11021brainpool/ondemand/3583brainpool/tvtotal/${year}/${month}/${day}/${year}${month}${day}_tvttd${episode}_${it}.flv"
+	done
+}
+
+get_playlist_from_cache()
+{
+	episode="${1}"
+
+	dir="${HOME}/.tvtotal"
+	[ ! -e "$dir" ] && mkdir -p "$dir"
+
+	fname="${dir}/${episode}"
+	if [ -e "$fname" ]; then
+		cat "$fname"
+	else
+		playlist="$(get_video_urls "${episode}")"
+		echo "$playlist" > "${fname}"
+		echo "$playlist"
 	fi
-fi
+}
 
-if [ ! "$wget_content" ]; then
-	echo "Episode part not found."
-	exit 1
-fi
+get_url_from_cache()
+{
+	episode="${1}"
+	part="${2}"
 
-if [[ "$avtype" = "flash" ]]; then
-	video_url="http://flv.e-tv.de$(echo "$wget_content" | grep 'SetVariable("videoUrl"' | awk -F\" '{ gsub(/%2F/, "/", $4); print $4; }')"
-else
-	video_url=`echo "$wget_content" | grep '<param name="FileName"' | awk -F\" '{ print $4; }' | sed -e "s/lowband/$mode/"`
-fi
-
-# HTTP: Playlist
-if echo "$video_url" | awk -F ":" '{ if($1 == "http" && substr($2, length($2)-3) != ".flv") exit(0); else exit(1); }'; then
-	playlist_content=`wget -O- $video_url 2>/dev/null`
-	video_url=`echo "$playlist_content" | grep "<ref HRE" | grep -v wmtotalopener | awk -F\" '{ print $2; }'`
-fi
-
-if [[ $play_all = 1 && $tvtotal_record = 0 ]]; then
-	playlist_dir="$HOME/.tvtotal/broadband"
-	[ ! -d "$playlist_dir" ] && mkdir -p "$playlist_dir"
-	playlist="$playlist_dir/$episode"
-
-	if [ ! -f "$playlist" ]; then
-		echo "Playlist doesn't exist yet. Creating..."
-
-		echo $video_url > "$playlist"
-
-		old_part=$part
-		while true; do
-			part=$[$part+1]
-			part_print=$part
-			part_length=`echo $part_print | awk '{ print length($0); }'`
-			while [[ $part_length < 2 ]]; do
-				part_print='0'$part_print
-				part_length=$[$part_length+1]
-			done
-			if ( [[ "$avtype" = "flash" ]] && ! wget --spider -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part_print-index.html" 1>/dev/null 2>/dev/null ) || ( [[ "$avtype" != "flash" ]] && ! wget --spider -O- "http://tvtotal.prosieben.de/components/videoplayer/$episode/$episode-00-$part_print-${avtype}_$mode.html" 1>/dev/null 2>/dev/null ); then
-				break;
+	playlist="$(get_playlist_from_cache "$episode")"
+	if [[ "$part" = "" ]]; then
+		echo "$playlist" | cut -f2
+	else
+		echo "$playlist" | while read it; do
+			if [[ "$(echo "$it" | cut -f1)" = "${part}" ]]; then
+				echo "$it" | cut -f2
+				break
 			fi
-			echo "$video_url" | sed -r "s/-$old_part([-.])/-$part_print\1/" >> "$playlist"
 		done
 	fi
+}
 
-	$tvtotal_mplayer -playlist "$playlist"
-else
-	while true; do
-		start_time=`date +%s`
-		if [[ $tvtotal_record != 0 ]]; then
-			$tvtotal_mplayer -dumpstream -dumpfile "$(basename "$video_url")" "$video_url"
-		else
-			$tvtotal_mplayer "$video_url"
-		fi
-		end_time=`date +%s`
-		time_diff=$[$end_time-$start_time]
+tidy_episode()
+{
+	episode="${1}"
 
-		if [ $time_diff -gt 5 ]; then
-			break
-		fi
+	episode_length=`echo $episode | awk '{ print length($0); }'`
+
+	while [[ $episode_length < 4 ]]; do
+		episode='0'$episode
+		episode_length=$[$episode_length+1]
 	done
+	echo "$episode"
+}
+
+tidy_part()
+{
+	part="${1}"
+
+	if [[ "$part" = "" ]]; then
+		return 0
+	fi
+
+	part_length=`echo $part | awk '{ print length($0); }'`
+	while [[ $part_length < 2 ]]; do
+		part='0'$part
+		part_length=$[$part_length+1]
+	done
+	echo "$part"
+}
+
+if [[ $# < 1 ]]; then
+	echo "Usage: $0 <episode> [part]" >&2
+	exit 1
 fi
 
+episode="$(tidy_episode "${1}")"
+part="$(tidy_part "${2}")"
+
+urls="$(get_url_from_cache "$episode" "$part")"
+if [[ "$urls" = "" ]]; then
+	exit 1
+fi
+
+echo "$urls"
 exit 0
