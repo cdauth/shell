@@ -12,6 +12,9 @@ get_video_urls()
 	year="$(echo "${date}" | cut -f3)"
 
 	parts="$(echo "${listing}" | grep '<img' | cut -d'_' -f7 | cut -d'.' -f1)"
+	if [[ $parts = "" ]]; then
+		return 1
+	fi
 	echo "${parts}" | while read it; do
 		echo -e "${it}\thttp://c11021-o.l.core.cdn.streamfarm.net/11021brainpool/ondemand/3583brainpool/tvtotal/${year}/${month}/${day}/${year}${month}${day}_tvttd${episode}_${it}.flv"
 	done
@@ -28,7 +31,7 @@ get_playlist_from_cache()
 	if [ -e "$fname" ]; then
 		cat "$fname"
 	else
-		playlist="$(get_video_urls "${episode}")"
+		playlist="$(get_video_urls "${episode}")" || return 1
 		echo "$playlist" > "${fname}"
 		echo "$playlist"
 	fi
@@ -39,7 +42,7 @@ get_url_from_cache()
 	episode="${1}"
 	part="${2}"
 
-	playlist="$(get_playlist_from_cache "$episode")"
+	playlist="$(get_playlist_from_cache "$episode")" || return 1
 	if [[ "$part" = "" ]]; then
 		echo "$playlist" | cut -f2
 	else
@@ -89,10 +92,4 @@ fi
 episode="$(tidy_episode "${1}")"
 part="$(tidy_part "${2}")"
 
-urls="$(get_url_from_cache "$episode" "$part")"
-if [[ "$urls" = "" ]]; then
-	exit 1
-fi
-
-echo "$urls"
-exit 0
+get_url_from_cache "$episode" "$part"
