@@ -22,15 +22,16 @@ get_video_urls()
 
 get_playlist_from_cache()
 {
-	episode="${1}"
+	local episode="${1}"
 
-	dir="${HOME}/.tvtotal"
+	local dir="${HOME}/.tvtotal"
 	[ ! -e "$dir" ] && mkdir -p "$dir"
 
-	fname="${dir}/${episode}"
+	local fname="${dir}/${episode}"
 	if [ -e "$fname" ]; then
 		cat "$fname"
 	else
+		local playlist
 		playlist="$(get_video_urls "${episode}")" || return 1
 		echo "$playlist" > "${fname}"
 		echo "$playlist"
@@ -39,9 +40,10 @@ get_playlist_from_cache()
 
 get_url_from_cache()
 {
-	episode="${1}"
-	part="${2}"
+	local episode="${1}"
+	local part="${2}"
 
+	local playlist
 	playlist="$(get_playlist_from_cache "$episode")" || return 1
 	if [[ "$part" = "" ]]; then
 		echo "$playlist" | cut -f2
@@ -57,9 +59,9 @@ get_url_from_cache()
 
 tidy_episode()
 {
-	episode="${1}"
+	local episode="${1}"
 
-	episode_length=`echo $episode | awk '{ print length($0); }'`
+	local episode_length=`echo $episode | awk '{ print length($0); }'`
 
 	while [[ $episode_length < 4 ]]; do
 		episode='0'$episode
@@ -70,13 +72,13 @@ tidy_episode()
 
 tidy_part()
 {
-	part="${1}"
+	local part="${1}"
 
 	if [[ "$part" = "" ]]; then
 		return 0
 	fi
 
-	part_length=`echo $part | awk '{ print length($0); }'`
+	local part_length=`echo $part | awk '{ print length($0); }'`
 	while [[ $part_length < 2 ]]; do
 		part='0'$part
 		part_length=$[$part_length+1]
