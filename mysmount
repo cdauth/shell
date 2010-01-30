@@ -1,12 +1,19 @@
 #!/bin/bash
 cd /home/cdauth/dev
-pmount "$1"
-status=$?
-dev=
+
+cat /proc/mounts | cut -d' ' -f1 | grep -qxF "$(readlink -f "$1")"
+nomount=$?
+
+if [ ! "$nomount" -eq 0 ]; then
+	pmount "$1"
+	status=$?
+else
+	status=0
+fi
+
 if [ $status -eq 5 ]; then
         echo "Exit code 5, trying using /sbin/cryptsetup"
-        dev=${!#}
-        /sbin/cryptsetup luksOpen "${dev}" "${dev}" && pmount "/dev/mapper/${dev}" "${dev}"
+        /sbin/cryptsetup luksOpen "$1" "$1" && pmount "/dev/mapper/$1" "$1"
 	status=$?
 fi
 if [ $status -eq 0 ]; then
@@ -15,8 +22,11 @@ if [ $status -eq 0 ]; then
 " HISTFILE= bash
 	clear
 	cd /
-	pumount "$1"
-	if [[ "${dev}" ]]; then
-		/sbin/cryptsetup luksClose "${dev}"
+
+	if [ ! "$nomount" -eq 0 ]; then
+		pumount "$1"
+		if [[ "${dev}" ]]; then
+			/sbin/cryptsetup luksClose "${dev}"
+		fi
 	fi
 fi

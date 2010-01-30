@@ -1,6 +1,12 @@
-sudo truecrypt -t --filesystem=none -k "" --protect-hidden=no ~/dev/"$1-tc" || exit $?
+#!/bin/bash
+
+test -e ~/dev/"$1"
+nomount=$?
+
+[ ! "$nomount" -eq 0 ] && ( sudo truecrypt -t --filesystem=none -k "" --protect-hidden=no ~/dev/"$1-tc" || exit $? )
 while [ ! -e ~/dev/"$1" ]; do
 	sleep .2
 done
 mysmount "$1"
-sudo truecrypt -t --filesystem=none -d ~/dev/"$1-tc"
+
+[ ! "$nomount" -eq 0 ] && sudo truecrypt -t --filesystem=none -d ~/dev/"$1-tc"
