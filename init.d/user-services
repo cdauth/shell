@@ -1,0 +1,43 @@
+#!/sbin/runscript
+
+check_acl() {
+	fname="$1"
+	uid="$2"
+
+	getfacl --numeric --tabular -- "$fname" 2>/dev/null | sed -e 's/#.*$//g' | while read line; do
+		if [[ "$(echo "$line" | cut -c19)" = "w" ]] && ! echo "$line" | grep '^USER' | grep -q " $uid "; then
+			return 1
+		fi
+	done
+
+	return $?
+}
+
+start() {
+	ebegin "Starting ${SVCNAME}"
+	
+	cat /etc/passwd | while read line; do
+		shell="$(echo "$line" | cut -d: -f7)"
+		if [[ "$shell" != "" ]] && cat /etc/shells | sed -e 's/#.*$//g' | grep -qFx "$shell"; then
+			dir="$(echo "$line" | cut -d: -f6)/init.d"
+			uid="$(echo "$line" | cut -d: -f3)"
+			username="$(echo "$line" | cut -d: -f1)"
+			for script in "$dir"/*; do
+				[ ! -f "$script" ] && continue
+				[ "$(stat -c%u -- "$script")" -ne "$uid" ] && continue
+				check_acl "$script" "$uid" || continue
+				echo "Starting $script"
+				start-stop-daemon --start -x "$script" --chuid "$username:$(stat -c%G -- "$script")" -p "/var/run/user-services/$(echo "$script" | md5sum | cut -d' ' -f1).pid" -m -b
+			done
+		fi
+	done
+	eend 0
+}
+
+stop() {
+	ebegin "Stopping ${SVCNAME}"
+	for pidfile in /var/run/user-services/*.pid; do
+		[ -f "$pidfile" ] && start-stop-daemon --stop -p "$pidfile"
+	done
+	eend 0
+}
