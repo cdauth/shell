@@ -37,7 +37,7 @@ start() {
 	ebegin "Starting ${SVCNAME}"
 	userServices start
 	eend 0
-]
+}
 
 stop() {
 	ebegin "Stopping ${SVCNAME}"
