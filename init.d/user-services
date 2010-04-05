@@ -13,9 +13,8 @@ check_acl() {
 	return $?
 }
 
-start() {
-	ebegin "Starting ${SVCNAME}"
-	
+userServices()
+{
 	cat /etc/passwd | while read line; do
 		shell="$(echo "$line" | cut -d: -f7)"
 		if [[ "$shell" != "" ]] && cat /etc/shells | sed -e 's/#.*$//g' | grep -qFx "$shell"; then
@@ -27,17 +26,27 @@ start() {
 				[ "$(stat -c%u -- "$script")" -ne "$uid" ] && continue
 				check_acl "$script" "$uid" || continue
 				echo "Starting $script"
-				start-stop-daemon --start -x "$script" --chuid "$username:$(stat -c%G -- "$script")" -p "/var/run/user-services/$(echo "$script" | md5sum | cut -d' ' -f1).pid" -m -b
+				#start-stop-daemon --start -x "$script" --chuid "$username:$(stat -c%G -- "$script")" -p "/var/run/user-services/$(echo "$script" | md5sum | cut -d' ' -f1).pid" -m -b
+				su "$username" -l -c "'$script' '$1'" &
 			done
 		fi
 	done
-	eend 0
 }
+
+start() {
+	ebegin "Starting ${SVCNAME}"
+	userServices start
+	eend 0
+]
 
 stop() {
 	ebegin "Stopping ${SVCNAME}"
-	for pidfile in /var/run/user-services/*.pid; do
-		[ -f "$pidfile" ] && start-stop-daemon --stop -p "$pidfile"
-	done
+
+	#for pidfile in /var/run/user-services/*.pid; do
+	#	[ -f "$pidfile" ] && start-stop-daemon --stop -p "$pidfile"
+	#done
+
+	userServices stop
+
 	eend 0
 }
