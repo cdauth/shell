@@ -13,9 +13,17 @@ get_video_urls()
 
 	parts="$(echo "${listing}" | grep '<img' | cut -d'_' -f7 | cut -d'.' -f1)"
 	if [[ $parts = "" ]]; then
-		return 1
+		# Old episodes' numbers are not listed
+		parts=""
+		n="$(echo "$listing" | grep -c '<img')"
+		for((it=1; it<=$n; it++)); do
+			[ $it -lt 10 ] && it="0$it"
+			parts="$parts$it
+"
+		done
 	fi
 	echo "${parts}" | while read it; do
+		[[ "$it" = "" ]] && continue
 		echo -e "${it}\thttp://c11021-o.l.core.cdn.streamfarm.net/11021brainpool/ondemand/3583brainpool/tvtotal/${year}/${month}/${day}/${year}${month}${day}_tvttd${episode}_${it}.flv"
 	done
 }
