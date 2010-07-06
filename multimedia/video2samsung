@@ -1,0 +1,49 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+	echo "Usage: $0 <input video file> [output avi file]" >&2
+	exit 1
+fi
+
+in="$1"
+if [ ! -z "$2" ]; then
+	if [ -d "$2" ]; then
+		out="$2/${in%.*}.mp4"
+	else
+		out="$2"
+	fi
+else
+	out="${in%.*}.mp4"
+fi
+
+[ -z "$video2mobile_rm" ] && export video2mobile_rm="rm -i"
+
+OUT_WIDTH=176
+OUT_HEIGHT=144
+
+OUT_ASPECT="$(echo "scale=3; $OUT_WIDTH/$OUT_HEIGHT" | bc)"
+
+info="$(ffmpeg -i "$in" 2>&1)"
+width=$(echo "$info" | grep -m1 Video: | perl -pe 's/^.* (\d+)x(\d+)(,.*)?$/$1/')
+height=$(echo "$info" | grep -m1 Video: | perl -pe 's/^.* (\d+)x(\d+)(,.*)?$/$2/')
+aspect="$(echo "scale=3; $width/$height" | bc)"
+
+new_width=$OUT_WIDTH
+new_height=$OUT_HEIGHT
+padding_ap=""
+
+if expr "$aspect" '<' "$OUT_ASPECT" >/dev/null; then
+	# Black padding left and right
+	padding="$(echo "($OUT_WIDTH - $OUT_HEIGHT * $aspect)/2" | bc)"
+	padding_ap="-padleft $padding -padright $padding"
+	new_width=$[$new_width-$padding*2]
+elif expr "$aspect" '>' "$OUT_ASPECT" >/dev/null; then
+	# Black padding top and bottom
+	padding="$(echo "($OUT_HEIGHT - $OUT_WIDTH / $aspect)/2" | bc)"
+	padding_ap="-padtop $padding -padbottom $padding"
+	new_height=$[$new_height-$padding*2]
+fi
+
+echo "$padding_ap"
+
+ffmpeg -i "$in" -s "${new_width}x${new_height}" -r 15 -ab 64k -acodec aac -b 95k -vcodec mpeg4 -aspect "$OUT_ASPECT" $padding_ap "$out" #&& $video2mobile_rm "$in"
