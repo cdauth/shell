@@ -6,7 +6,7 @@ get_video_urls()
 
 	listing="$(wget -O- -o/dev/null "http://tvtotal.prosieben.de/tvtotal/includes/php/ajax.php?action=getSendungById&contentType=video&showId=${episode}-00&teaserType=video&tabbing=sendung")"
 
-	date="$(echo "$listing" | grep 'related_linktext_headright' | head -1 | cut -d '>' -f2 | cut -d '<' -f1 | sed -e 's/\./\t/g')"
+	date="$(echo "$listing" | grep 'related_linktext_headright' | tail -1 | cut -d '>' -f2 | cut -d '<' -f1 | sed -e 's/\./\t/g')"
 	day="$(echo "${date}" | cut -f1)"
 	month="$(echo "${date}" | cut -f2)"
 	year="$(echo "${date}" | cut -f3)"
