@@ -17,8 +17,8 @@ get_video_urls()
 		parts=""
 		n="$(echo "$listing" | grep -c '<img')"
 		for((it=1; it<=$n; it++)); do
-			[ $it -lt 10 ] && it="0$it"
-			parts="$parts$it
+			[ $it -lt 10 ] && it_f="0$it" || it_f="$it"
+			parts="$parts$it_f
 "
 		done
 	fi
