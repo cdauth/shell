@@ -44,4 +44,4 @@ elif expr "$aspect" '>' "$OUT_ASPECT" >/dev/null; then
 	new_height=$[$new_height-$padding*2]
 fi
 
-ffmpeg -i "$in" -s "${new_width}x${new_height}" -r 15 -ab 64k -acodec aac -b 95k -vcodec mpeg4 -aspect "$OUT_ASPECT" $padding_ap "$out" #&& $video2mobile_rm "$in"
+ffmpeg -i "$in" -s "${new_width}x${new_height}" -r 15 -ab 64k -acodec aac -b 95k -vcodec mpeg4 -strict experimental -aspect "$OUT_ASPECT" $padding_ap "$out" #&& $video2mobile_rm "$in"
