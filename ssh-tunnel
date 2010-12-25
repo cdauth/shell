@@ -3,8 +3,10 @@
 server="$1"
 redir_port="$2"
 
+ssh_tunnel_iptables="$(dirname "$(which "$0")")/ssh-tunnel-iptables"
+
 start() {
-	sudo /usr/local/bin/ssh-tunnel-iptables start
+	sudo "$ssh_tunnel_iptables" start
 
 	ssh_opts=( )
 	
@@ -24,7 +26,7 @@ stop() {
 		kill "$line" 2>/dev/null
 	done
 
-	sudo /usr/local/bin/ssh-tunnel-iptables stop
+	sudo "$ssh_tunnel_iptables" stop
 }
 
 trap stop INT QUIT TERM EXIT HUP
