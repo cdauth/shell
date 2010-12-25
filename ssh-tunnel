@@ -1,0 +1,34 @@
+#!/bin/bash
+
+server="$1"
+redir_port="$2"
+
+start() {
+	sudo /usr/local/bin/ssh-tunnel-iptables start
+
+	ssh_opts=( )
+	
+	if [ ! -z "$redir_port" ]; then
+		p1="$[redir_port+1]"
+		p2="$[redir_port+2]"
+		p3="$[redir_port+3]"
+		ssh_opts=( -R ":$redir_port:127.0.0.1:$redir_port" -R ":$p1:127.0.0.1:$p1" -R ":$p2:127.0.0.1:$p2" -R ":$p3:127.0.0.1:$p3" )
+	fi
+
+	autossh -M 20511 -4 "$server" -C -p 443 -N -D 127.0.0.1:54399 "${ssh_opts[@]}" &
+	redsocks -c /etc/redsocks/redsocks.conf &
+}
+
+stop() {
+	jobs -p | while read line; do
+		kill "$line" 2>/dev/null
+	done
+
+	sudo /usr/local/bin/ssh-tunnel-iptables stop
+}
+
+trap stop INT QUIT TERM EXIT HUP
+
+start
+wait "$!"
+stop
