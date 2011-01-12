@@ -17,7 +17,7 @@ start() {
 		ssh_opts=( -R ":$redir_port:127.0.0.1:$redir_port" -R ":$p1:127.0.0.1:$p1" -R ":$p2:127.0.0.1:$p2" -R ":$p3:127.0.0.1:$p3" )
 	fi
 
-	autossh -M 20511 -4 "$server" -C -p 443 -N -D 127.0.0.1:54399 "${ssh_opts[@]}" &
+	autossh -M 20511 -4 "$server" -C -N -D 127.0.0.1:54399 "${ssh_opts[@]}" &
 	redsocks -c /etc/redsocks/redsocks.conf &
 }
 
