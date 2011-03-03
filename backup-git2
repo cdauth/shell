@@ -1,0 +1,46 @@
+#!/bin/bash
+
+[ -z "${BACKUP_DIR+x}" ] && export BACKUP_DIR="/backup"
+[ -z "${BACKUP_RSYNC+x}" ] && export BACKUP_RSYNC=(rsync -v --progress)
+[ -z "${BACKUP_RSYNC_FLAGS+x}" ] && export BACKUP_RSYNC_FLAGS=(-AX)
+[ -z "${BACKUP_GIT+x}" ] && export BACKUP_GIT=(git)
+[ -z "${BACKUP_MESSAGE+x}" ] && export BACKUP_MESSAGE="Automated backup"
+
+if [ $# -lt 2 ]; then
+	echo "Usage: $0 <application name> <directory 1> [<directory 2>, ...]" >&2
+	exit 1
+fi
+
+BACKUP_DIR="$BACKUP_DIR/$1-git"
+shift
+FILES="$@"
+
+[ ! -e "$BACKUP_DIR" ] && mkdir -p "$BACKUP_DIR"
+
+if [ ! -e "$BACKUP_DIR/backup.git" ]; then
+	"${BACKUP_GIT[@]}" --git-dir="$BACKUP_DIR/backup.git" init --bare
+fi
+
+if [ ! -e "$BACKUP_DIR/backup" ]; then
+	mkdir "$BACKUP_DIR/backup"
+fi
+
+find "$BACKUP_DIR/backup" -name ".__git*" | while read line; do
+	mv "$line" "$(dirname "$line")/$(basename "$line" | sed -e 's/^\.__git/.git/')"
+done
+
+"${BACKUP_RSYNC[@]}" --delete "${BACKUP_RSYNC_FLAGS[@]}" '-aHS' "${FILES[@]}" "$BACKUP_DIR/backup/"
+ret=$?
+
+if [ ! $ret -eq 0 -a ! $ret -eq 24 ]; then
+	exit $ret
+fi
+
+find "$BACKUP_DIR/backup" -name ".git*" | while read line; do
+	mv "$line" "$(dirname "$line")/$(basename "$line" | sed -e 's/^\.git/.__git/')"
+done
+
+"${BACKUP_GIT[@]}" --git-dir="$BACKUP_DIR/backup.git" --work-tree="$BACKUP_DIR/backup" add .
+"${BACKUP_GIT[@]}" --git-dir="$BACKUP_DIR/backup.git" --work-tree="$BACKUP_DIR/backup" commit -am "$BACKUP_MESSAGE"
+
+exit $?
