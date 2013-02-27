@@ -24,8 +24,8 @@ OUT_HEIGHT=144
 OUT_ASPECT="$(echo "scale=3; $OUT_WIDTH/$OUT_HEIGHT" | bc)"
 
 info="$(ffmpeg -i "$in" 2>&1)"
-width=$(echo "$info" | grep -m1 Video: | perl -pe 's/^.* (\d+)x(\d+)(,.*)?$/$1/')
-height=$(echo "$info" | grep -m1 Video: | perl -pe 's/^.* (\d+)x(\d+)(,.*)?$/$2/')
+width="$(echo "$info" | grep -m1 Video: | perl -pe 's/^.* (\d+)x(\d+)([, ].*)?$/$1/')"
+height="$(echo "$info" | grep -m1 Video: | perl -pe 's/^.* (\d+)x(\d+)([, ].*)?$/$2/')"
 aspect="$(echo "scale=3; $width/$height" | bc)"
 
 new_width=$OUT_WIDTH
@@ -33,15 +33,13 @@ new_height=$OUT_HEIGHT
 padding_ap=""
 
 if expr "$aspect" '<' "$OUT_ASPECT" >/dev/null; then
-	# Black padding left and right
-	padding="$(echo "($OUT_WIDTH - $OUT_HEIGHT * $aspect)/2" | bc)"
-	padding_ap="-padleft $padding -padright $padding"
-	new_width=$[$new_width-$padding*2]
+	new_width="$(echo $OUT_HEIGHT*$aspect | bc)"
 elif expr "$aspect" '>' "$OUT_ASPECT" >/dev/null; then
-	# Black padding top and bottom
-	padding="$(echo "($OUT_HEIGHT - $OUT_WIDTH / $aspect)/2" | bc)"
-	padding_ap="-padtop $padding -padbottom $padding"
-	new_height=$[$new_height-$padding*2]
+	new_height="$(echo $OUT_WIDTH/$aspect | bc)"
 fi
 
-ffmpeg -i "$in" -s "${new_width}x${new_height}" -r 15 -ab 64k -acodec aac -b 95k -vcodec mpeg4 -strict experimental -aspect "$OUT_ASPECT" $padding_ap "$out" #&& $video2mobile_rm "$in"
+x="$(echo "($OUT_WIDTH-$new_width)/2" | bc)"
+y="$(echo "($OUT_HEIGHT-$new_height)/2" | bc)"
+
+ffmpeg -i "$in" -s "${new_width}x${new_height}" -r 15 -ab 64k -acodec aac -b 95k -vcodec mpeg4 -strict experimental -aspect "$OUT_ASPECT" -vf "pad=$OUT_WIDTH:$OUT_HEIGHT:$x:$y" "$out"
+#ffmpeg -i "$in" -s "${new_width}x${new_height}" -r 15 -ab 64k -acodec aac -b 95k -vcodec mpeg4 -strict experimental -aspect "$OUT_ASPECT" $padding_ap "$out" #&& $video2mobile_rm "$in"
