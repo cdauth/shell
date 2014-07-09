@@ -41,5 +41,4 @@ fi
 x="$(echo "($OUT_WIDTH-$new_width)/2" | bc)"
 y="$(echo "($OUT_HEIGHT-$new_height)/2" | bc)"
 
-ffmpeg -i "$in" -s "${new_width}x${new_height}" -r 15 -ab 64k -acodec aac -b 95k -vcodec mpeg4 -strict experimental -aspect "$OUT_ASPECT" -vf "pad=$OUT_WIDTH:$OUT_HEIGHT:$x:$y" "$out"
-#ffmpeg -i "$in" -s "${new_width}x${new_height}" -r 15 -ab 64k -acodec aac -b 95k -vcodec mpeg4 -strict experimental -aspect "$OUT_ASPECT" $padding_ap "$out" #&& $video2mobile_rm "$in"
+ffmpeg -i "$in" -r 15 -b:a 64k -acodec aac -b:v 95k -vcodec mpeg4 -strict experimental -aspect "$OUT_ASPECT" -vf "scale=${new_width}x${new_height},pad=$OUT_WIDTH:$OUT_HEIGHT:$x:$y" "$out"
